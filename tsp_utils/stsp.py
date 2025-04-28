@@ -70,7 +70,7 @@ def solve_tsp(G, cost="weight", verbose=False):
     for i in V:
         model.addCons(quicksum(x[u, v] for (u, v) in delta({i}, edges)) == 2, "degree(%s)" % i)
 
-    model.setObjective(quicksum(G[e[0]][e[1]][cost] * x[*e] for e in edges), "minimize")
+    model.setObjective(quicksum(G[e[0]][e[1]][cost] * x[e[0], e[0]] for e in edges), "minimize")
 
     EPS = 1.e-6
     isMIP = False
@@ -154,9 +154,9 @@ def solve_tsp_fixed_edge(G, e=None, cost="weight", verbose=False):
     model.addCons(x[i, j] == 1, "fixed_edge(%s,%s)" % (i, j))
 
     for i in V:
-        model.addCons(quicksum(x[*e] for e in delta({i}, edges)) == 2, "degree(%s)" % i)
+        model.addCons(quicksum(x[u, v] for (u, v) in delta({i}, edges)) == 2, "degree(%s)" % i)
 
-    model.setObjective(quicksum(G[e[0]][e[1]][cost] * x[*e] for e in edges), "minimize")
+    model.setObjective(quicksum(G[e[0]][e[1]][cost] * x[e[0], e[1]] for e in edges), "minimize")
 
     EPS = 1.e-6
     isMIP = False
