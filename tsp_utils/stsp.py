@@ -68,7 +68,7 @@ def solve_tsp(G, cost="weight", verbose=False):
         x[i, j] = model.addVar(vtype="C", lb=0, ub=1, name="x(%s,%s)" % (i, j))
 
     for i in V:
-        model.addCons(quicksum(x[*e] for e in delta({i}, edges)) == 2, "degree(%s)" % i)
+        model.addCons(quicksum(x[u, v] for (u, v) in delta({i}, edges)) == 2, "degree(%s)" % i)
 
     model.setObjective(quicksum(G[e[0]][e[1]][cost] * x[*e] for e in edges), "minimize")
 
