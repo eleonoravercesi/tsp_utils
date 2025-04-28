@@ -1,5 +1,9 @@
 import networkx
 from pyscipopt import Model, quicksum
+import pathlib
+import tsplib95
+import os
+import subprocess
 
 def delta(S, edges):
     """
@@ -180,3 +184,145 @@ def solve_tsp_fixed_edge(G, e=None, cost="weight", verbose=False):
 
 
     return model.getObjVal(), non_zero_edges, runtime
+
+def create_tsp_problem_object(G, cost="weight"):
+    problem = tsplib95.models.StandardProblem()
+    problem.name = "tmp"
+    problem.type = "TSP"
+    problem.dimension = G.number_of_nodes()
+    problem.edge_weight_type = "EXPLICIT"
+    problem.edge_weight_format = "UPPER_ROW"
+    edge_weight_section = []
+    for i in range(problem.dimension):
+        for j in range(i + 1, problem.dimension):
+            edge_weight_section.append(int(G[i][j][cost]))
+    problem.edge_weights = [edge_weight_section]
+    return problem
+
+def parse_log(filename):
+    F = open(filename)
+    lines = F.readlines()
+    F.close()
+    ot_line = next(filter(lambda x : "Optimal Solution:" in x, list(lines.__reversed__())))
+    bb_nodes_line = ""
+    try:
+        bb_nodes_line = next(filter(lambda x : "Number of bbnodes:" in x, list(lines.__reversed__())))
+    except:
+        pass
+    time_line = next(filter(lambda x : "Total Running Time:" in x , list(lines.__reversed__())))
+    ot = float(ot_line.split(":")[1].strip())
+    bb_nodes = 0
+    if len(bb_nodes_line) >= 1:
+        bb_nodes = float(bb_nodes_line.split(":")[1].strip())
+    time = float(time_line.split(":")[1].split("(")[0])
+    return ot, bb_nodes, time
+
+def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], verbose=False, remove_all=False):
+    """
+    Run the Concorde TSP solver on a given graph.
+
+    Parameters
+    ----------
+    G : networkx.Graph
+        The graph to solve.
+    concorde_path : str
+    """
+    assert concorde_path != None, "Concorde path must be provided"
+
+    concorde_path = pathlib.Path(concorde_path)
+
+    # Create a directory named tmp to store temporary files
+    tmp_dir = "./tmp/"
+    pathlib.Path(tmp_dir).mkdir(parents=True, exist_ok=True)
+
+    problem = create_tsp_problem_object(G, cost=cost)
+    tsp_file = tmp_dir + "tmp.tsp"
+    with open(tsp_file, 'w') as f:
+        problem.write(f)
+
+    # Change the directory
+    os.chdir(tmp_dir)
+
+    # ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+    # Run Concorde
+    # ⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐
+
+    # is verbose?
+    if not verbose:
+        options += ["-x"]
+    # Do we want to use the seed?
+    if seed != None:
+        options += ["-s {}".format(seed)]
+
+    # Merge all the options together
+    options = " ".join(options)
+
+    # ~/libraries/concorde/build/TSP/concorde tmp.tsp > tmp.log
+    subprocess.run(f"{concorde_path} {options} tmp.tsp > tmp.log", shell=True)
+    ot, bb_nodes, time = parse_log("tmp.log")
+
+    # Return to the original directory
+    os.chdir("..")
+
+    if remove_all:
+        # Remove the tmp directory
+        os.rmdir(tmp_dir, recursive=True)
+    return ot, bb_nodes, time
+
+def run_concorde_LB(G, cost="weight", concorde_path=None, seed = None, options=[], verbose=False, remove_all=False):
+    # is verbose?
+    if not verbose:
+        options += ["-x"]
+    # Do we want to use the seed?
+    if seed != None:
+        options += ["-s {}".format(seed)]
+
+    # Just the LB
+    options += ["-I"]
+
+    # Merge all the options together
+    options = " ".join(options)
+    return run_concorde(G, cost=cost, concorde_path=concorde_path, options=options, seed=seed, verbose=verbose, remove_all=remove_all)
+
+
+
+
+
+
+
+#
+# def run_concorde_LB(tsp_file, root, logname="test.log", remove=True, change_dir=None):
+#     try:
+#         assert root[-1] == "/"
+#     except:
+#         root = root + "/"
+#     assert type(change_dir) == str or change_dir is None, "change_dir must be a string path of the directory you want to run things in or None"
+#     # If you have to change dir for the run
+#     # Check if the directory RUN
+#     if change_dir is not None:
+#         if not os.path.exists(change_dir):
+#             os.mkdir(change_dir)
+#         # Change directory
+#         os.chdir(change_dir)
+#     subprocess.run("{}{} -x -I ../{} > {}".format(root, "concorde", tsp_file, logname), shell=True)
+#     # Open the log file
+#     F = open(logname, "r")
+#     lines = F.readlines()
+#     F.close()
+#
+#     # Get the line with written "Bound: "
+#     lb_line = next(filter(lambda x : "Bound: " in x, lines))
+#     lb = float(lb_line.split(":")[1].split("(")[0])
+#     # Get the line with the time
+#     time_line = next(filter(lambda x: "Total Running Time:" in x, list(lines.__reversed__())))
+#     time = float(time_line.split(":")[1].strip().split("(")[0])
+#
+#     if remove:
+#         os.remove(logname)
+#     if change_dir is not None:
+#         os.chdir("..")
+#     return lb, time
+#
+#
+
+#
