@@ -263,7 +263,7 @@ def parse_sol(filename, as_tour = False, as_list_of_edges = False):
         for i in range(len(nodes) - 1):
             u = min(nodes[i], nodes[i + 1])
             v = max(nodes[i], nodes[i + 1])
-            edges.append(u, v)
+            edges.append((u, v))
         return edges
 
 def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], verbose=False, remove_all=False, get_tour = False, get_edges = False):
