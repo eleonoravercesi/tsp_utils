@@ -1,8 +1,6 @@
-from cgi import print_environ_usage
-
 import networkx as nx
 import time
-from stsp import solve_tsp, solve_tsp_fixed_edge
+from tsp_utils.stsp import solve_tsp, solve_tsp_fixed_edge
 import numpy as np
 from python_tsp.exact import solve_tsp_dynamic_programming
 

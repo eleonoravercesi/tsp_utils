@@ -5,3 +5,4 @@
 
 # TODO 
 - Check if the env.yml really work 
+- Something weird with Conda env and dependecies
