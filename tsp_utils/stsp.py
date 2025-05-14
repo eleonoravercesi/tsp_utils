@@ -291,7 +291,7 @@ def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], 
         tsp_file = tmp_dir + "tmp.tsp"
         with open(tsp_file, 'w') as f:
             problem.write(f)
-    elif type(G) == str:
+    else:
         F = open(G, "r")
         lines = F.read()
         F.close()
