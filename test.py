@@ -52,4 +52,5 @@ if __name__ == "__main__":
             G.add_edge(i, j, weight=c_i_j)
             e += 1
 
-    print(run_concorde(G, concorde_path="~/libraries/concorde/build/TSP/concorde"))
+    eil51_path = "/home/vercee/Documents/STSP_instances/TSPLIB/eil51.tsp"
+    print(run_concorde(eil51_path, concorde_path="~/libraries/concorde/build/TSP/concorde"))

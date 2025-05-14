@@ -1,4 +1,5 @@
 import networkx
+import networkx as nx
 from pyscipopt import Model, quicksum
 import pathlib
 import tsplib95
@@ -285,10 +286,18 @@ def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], 
     tmp_dir = "./tmp/"
     pathlib.Path(tmp_dir).mkdir(parents=True, exist_ok=True)
 
-    problem = create_tsp_problem_object(G, cost=cost)
-    tsp_file = tmp_dir + "tmp.tsp"
-    with open(tsp_file, 'w') as f:
-        problem.write(f)
+    if type(G) == nx.Graph:
+        problem = create_tsp_problem_object(G, cost=cost)
+        tsp_file = tmp_dir + "tmp.tsp"
+        with open(tsp_file, 'w') as f:
+            problem.write(f)
+    elif type(G) == str:
+        F = open(G, "r")
+        lines = F.read()
+        F.close()
+        F = open(tmp_dir + "tmp.tsp", "w+")
+        F.write(lines)
+        F.close()
 
     # Change the directory
     os.chdir(tmp_dir)
