@@ -5,6 +5,8 @@ import pathlib
 import tsplib95
 import os
 import subprocess
+from itertools import combinations
+from math import ceil
 
 def delta(S, edges):
     """
@@ -350,45 +352,91 @@ def run_concorde_LB(G, cost="weight", concorde_path=None, seed = None, options=[
 
     return run_concorde(G, cost=cost, concorde_path=concorde_path, options=options, seed=seed, verbose=verbose, remove_all=remove_all, get_tour=False)
 
+def S_set(n):
+    """
+    Generate all the sets S such that 3 <= |S| <= ceil(n/2)
 
+    Parameters
+    ----------
+    n : int
+        The number of nodes in the graph.
 
+    Returns
+    -------
+    list
+        A list of sets S.
+    """
+    S = []
+    nodes = list(range(n))
+    for r in range(3, ceil(n // 2) + 1):
+        comb = combinations(nodes, r)
+        for c in comb:
+            S.append(set(c))
+    return S
 
+def dual_sep(G, cost = "weight", verbose=False):
+    """
+    Solve the dual formulation of the Dantzig-Fulkerson-Johnson formulation, that can be find, for instance, here: https://static.aminer.org/pdf/PDF/000/406/746/finding_the_exact_integrality_gap_for_small_traveling_salesman_problems.pdf
+    Equation (15) - (18)
+    Parameters
+    ----------
+    G : networkx.Graph
+        NetworkX graph
+    cost : string
+        Cost function, must be one of the edges attributes. Default: 'weight'
+    verbose : bool
+        Whether to print verbose output. Default: False
+    Returns
+    -------
+    y : dict
+        The dual variables for the degree constraints.
+    d : dict
+        The dual variables for the cut constraints.
+    u : dict
+        The dual variables for the upper bound constraints.
+    obj_val : float
+        The optimal value of the dual problem.
+    # TODO may be optimized by adding column generation
+    """
 
+    # main part of the solution process:
+    model = Model()
 
+    if not verbose:
+        model.hideOutput()  # silent/verbose mode
 
-#
-# def run_concorde_LB(tsp_file, root, logname="test.log", remove=True, change_dir=None):
-#     try:
-#         assert root[-1] == "/"
-#     except:
-#         root = root + "/"
-#     assert type(change_dir) == str or change_dir is None, "change_dir must be a string path of the directory you want to run things in or None"
-#     # If you have to change dir for the run
-#     # Check if the directory RUN
-#     if change_dir is not None:
-#         if not os.path.exists(change_dir):
-#             os.mkdir(change_dir)
-#         # Change directory
-#         os.chdir(change_dir)
-#     subprocess.run("{}{} -x -I ../{} > {}".format(root, "concorde", tsp_file, logname), shell=True)
-#     # Open the log file
-#     F = open(logname, "r")
-#     lines = F.readlines()
-#     F.close()
-#
-#     # Get the line with written "Bound: "
-#     lb_line = next(filter(lambda x : "Bound: " in x, lines))
-#     lb = float(lb_line.split(":")[1].split("(")[0])
-#     # Get the line with the time
-#     time_line = next(filter(lambda x: "Total Running Time:" in x, list(lines.__reversed__())))
-#     time = float(time_line.split(":")[1].strip().split("(")[0])
-#
-#     if remove:
-#         os.remove(logname)
-#     if change_dir is not None:
-#         os.chdir("..")
-#     return lb, time
-#
-#
+    n = G.number_of_nodes()
+    edges = [(i, j) for i in range(n) for j in range(i + 1, n)]
+    V = range(n)
 
-#
+    # Add dual variables for the degree constraints
+    y = {}
+    for i in V:
+        y[i] = model.addVar(vtype="C", name="y(%s)" % i) # Free
+
+    # Add dual variables for the upper bound constraints
+    u = {}
+    for e in edges:
+        u[e] = model.addVar(vtype="C", name="u(%s,%s)" % (e[0], e[1]), lb=0) # >= 0
+
+    # Add dual variables for the cut constraints
+    d = {}
+    S_all = S_set(n)
+    for S in S_all:
+        d[frozenset(S)] = model.addVar(vtype="C", name="d(%s)" % str(S), lb=0) # >= 0
+
+    # Add the constraints
+    for i, j in edges:
+        model.addCons(y[i] + y[j] - u[i, j] + quicksum(d[frozenset(S)] for S in S_all if (i, j) in delta(S, edges)) <= G[i][j][cost], "edge(%s,%s)" % (i, j))
+
+    model.setObjective(quicksum(2 * y[i] for i in V) - quicksum(u[e] for e in S) + 2 * quicksum(d[frozenset(S)] for S in S_all), "maximize")
+
+    model.optimize()
+
+    # Now return the values of the dual variables
+    y_val = {i: model.getVal(y[i]) for i in V}
+    u_val = {e: model.getVal(u[e]) for e in edges}
+    d_val = {S: model.getVal(d[S]) for S in d.keys()}
+    obj_val = model.getObjVal()
+
+    return y_val, d_val, u_val, obj_val
