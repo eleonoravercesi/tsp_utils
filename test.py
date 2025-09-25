@@ -1,56 +1,44 @@
+#%%
+# Test the function dual_sep
+
+from tsp_utils.stsp import dual_sep, solve_tsp
 import networkx as nx
-import time
-from tsp_utils.stsp import solve_tsp, solve_tsp_fixed_edge, run_concorde
-import numpy as np
+from networkx.algorithms.approximation.steinertree import metric_closure
 
-def test_solve_tsp():
-    n = 17
-    c_max = 100
-    # Create random list of edges
-    C = np.random.randint(1, c_max,  (n*(n-1)//2, ))
+# Create a path graph on n nodes
+debug = False
+n = 12
+G = nx.path_graph(n)
+# Add weights to the edges
+for (u, v) in G.edges():
+    G.edges[u, v]['weight'] = 1
 
-    C_mat = np.zeros((n, n))
+eps = 0.01
+for i in range(0, n):
+    if i + 2 < n:
+        G.add_edge(i, (i + 2), weight=1 + eps)
+        if debug:
+            print(f"Adding edge {(i, (i + 2))} with weight {1 + eps}")
 
-    G = nx.Graph()
-    e = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            c_i_j = C[e]
-            G.add_edge(i, j, weight=c_i_j)
-            C_mat[i, j] = c_i_j
-            C_mat[j, i] = c_i_j
-            e += 1
+# Complete the graph
+G = metric_closure(G)
 
+# Solve the TSP
+TSP, edges, runtime = solve_tsp(G, cost="distance")
 
-    opt, edges, runtime = solve_tsp(G)
-    print("MIP runtime: ", runtime)
+# Solve the dual
+y_val, d_val, u_val, DTSP = dual_sep(G, cost="distance", write=False)
 
-    # DP
-    start = time.time()
-    tour, opt_real = solve_tsp_dynamic_programming(C_mat)
-    end = time.time()
-    print("DP runtime: ", end - start)
+assert round(DTSP, 5) == round(TSP, 5)
 
-    assert opt == opt_real, f"opt: {opt}, opt_real: {opt_real}"
+for e in u_val.keys():
+    if u_val[e] > 0:
+        print(e, round(u_val[e],4))
 
-    opt_fe, _, runtime = solve_tsp_fixed_edge(G, (0, 1))
-    print("One edge fixed runtime: ", runtime)
+for S in d_val.keys():
+    if d_val[S] > 0:
+        print(S, round(d_val[S],4))
 
-    assert opt_fe >= opt_real
-
-if __name__ == "__main__":
-    n = 17
-    c_max = 100
-    # Create random list of edges
-    C = np.random.randint(1, c_max, (n * (n - 1) // 2,))
-
-    G = nx.Graph()
-    e = 0
-    for i in range(n):
-        for j in range(i + 1, n):
-            c_i_j = C[e]
-            G.add_edge(i, j, weight=c_i_j)
-            e += 1
-
-    eil51_path = "/home/vercee/Documents/STSP_instances/TSPLIB/eil51.tsp"
-    print(run_concorde(eil51_path, concorde_path="~/libraries/concorde/build/TSP/concorde"))
+for i in range(n):
+   if y_val[i] > 1e-10:
+       print(i, round(y_val[i], 4))

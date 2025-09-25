@@ -374,7 +374,7 @@ def S_set(n):
             S.append(set(c))
     return S
 
-def dual_sep(G, cost = "weight", verbose=False):
+def dual_sep(G, cost = "weight", verbose=False, write=False):
     """
     Solve the dual formulation of the Dantzig-Fulkerson-Johnson formulation, that can be find, for instance, here: https://static.aminer.org/pdf/PDF/000/406/746/finding_the_exact_integrality_gap_for_small_traveling_salesman_problems.pdf
     Equation (15) - (18)
@@ -429,7 +429,7 @@ def dual_sep(G, cost = "weight", verbose=False):
     for i, j in edges:
         model.addCons(y[i] + y[j] - u[i, j] + quicksum(d[frozenset(S)] for S in S_all if (i, j) in delta(S, edges)) <= G[i][j][cost], "edge(%s,%s)" % (i, j))
 
-    model.setObjective(quicksum(2 * y[i] for i in V) - quicksum(u[e] for e in S) + 2 * quicksum(d[frozenset(S)] for S in S_all), "maximize")
+    model.setObjective(quicksum(2 * y[i] for i in V) - quicksum(u[e] for e in edges) + 2 * quicksum(d[frozenset(S)] for S in S_all), "maximize")
 
     model.optimize()
 
@@ -438,5 +438,10 @@ def dual_sep(G, cost = "weight", verbose=False):
     u_val = {e: model.getVal(u[e]) for e in edges}
     d_val = {S: model.getVal(d[S]) for S in d.keys()}
     obj_val = model.getObjVal()
+
+    # Write the model in .lp file
+    if write:
+        model.writeProblem("dual_sep.lp")
+        print("Model written in dual_sep.lp")
 
     return y_val, d_val, u_val, obj_val
