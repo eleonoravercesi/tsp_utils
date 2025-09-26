@@ -72,7 +72,7 @@ def solve_tsp(G, cost="weight", verbose=False):
     x = {}
     for e in edges:
         i, j = e
-        x[i, j] = model.addVar(vtype="C", lb=0, ub=1, name="x(%s,%s)" % (i, j))
+        x[i, j] = model.addVar(vtype="I", lb=0, ub=1, name="x(%s,%s)" % (i, j))
 
     for i in V:
         model.addCons(quicksum(x[u, v] for (u, v) in delta({i}, edges)) == 2, "degree(%s)" % i)
@@ -445,3 +445,94 @@ def dual_sep(G, cost = "weight", verbose=False, write=False):
         print("Model written in dual_sep.lp")
 
     return y_val, d_val, u_val, obj_val
+
+def solve_sep(G, cost="weight", verbose=False, time_limit=None, tol=1e-6):
+    """
+    Solve the subtour elimination problem, that is, linear relaxation of the Dantzig-Fulkerson-Johnson formulation with all the subtour elimination constraints.
+    Parameters
+    ----------
+    G : networkx.Graph
+        NetworkX graph
+    cost : string
+        Cost function, must be one of the edges attributes. Default: 'weight'
+    verbose : bool
+        Whether to print verbose output. Default: False
+    time_limit : float
+        Time limit for the solver. Default: None
+    tol : float
+        Tolerance for the cut constraints. Default: 1e-6
+
+    Returns
+    -------
+    obj_val : float
+        The optimal value of the primal problem.
+    x : dict
+        The primal variables for the edges.
+    runtime : float
+        The runtime of the solver.
+    """
+
+
+    n = G.number_of_nodes()
+    edges = [(i, j) for i in range(n) for j in range(i + 1, n)]
+
+    # Create the model
+    model = Model("STSP_LP")
+    if verbose < 2:
+        model.hideOutput()
+    if time_limit is not None:
+        model.setRealParam("limits/time", time_limit)
+
+    # Add variables
+    x = {}
+    for u, v in edges:
+        x[(u, v)] = model.addVar(vtype="C", name=f"x_{u}_{v}", lb=0, ub=1)
+
+    # Add degree constraints
+    for v in range(n):
+        model.addCons(quicksum(x[a] for a in delta({v}, edges)) == 2, name=f"degree_{v}")
+
+    # Set the objective function
+    model.setObjective(quicksum(x[a] * G[a[0]][a[1]][cost] for a in edges))
+
+    # Solve the initial model
+    model.optimize()
+
+    # Get the initial objective value
+    if verbose:
+        obj = model.getObjVal()
+        print(f"Initial Objective value: {obj}")
+
+    # Build graph from solution
+    H = nx.Graph()
+    for u, v in edges:
+        x_u_v = max(model.getVal(x[(u, v)]), 0)  # Just in case of numerical issues
+        H.add_edge(u, v, weight=x_u_v)
+
+    # Compute minimum cut
+    cut_val, partition = nx.stoer_wagner(H, weight="weight")
+    W = set(partition[0])
+
+    # Add cuts iteratively
+    cut_counter = 0
+    while cut_val < 2 - tol:
+        model.freeTransform()
+        cut_counter += 1
+        model.addCons(quicksum(x[a] for a in delta(W, edges)) >= 2, name=f"cut_{cut_counter}")
+        model.optimize()
+
+        if verbose and model.getObjVal() > obj:
+            obj = model.getObjVal()
+            print(f"Cut {cut_counter}, Objective value: {model.getObjVal()}")
+
+        H = nx.Graph()
+        for u, v in edges:
+            x_u_v = max(model.getVal(x[(u, v)]), 0)  # Just in case of numerical issues
+            H.add_edge(u, v, weight=x_u_v)
+
+        cut_val, partition = nx.stoer_wagner(H, weight="weight")
+        W = set(partition[0])
+
+    # Return solution, objective value, and runtime
+    solution = {e: model.getVal(var) for e, var in x.items()}
+    return model.getObjVal(), solution, model.getSolvingTime()
