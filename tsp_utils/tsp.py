@@ -72,6 +72,22 @@ def run_LKH(file, seed = 42, lkh3_path = None):
     cost_line = lines[-6].split(",")
     costs = [float(x.split(" = ")[1]) for x in cost_line]
     costs = dict(zip(["min", "avg", "max"], costs))
+
+    # Get back to the original folder
+    os.chdir("../")
+
+    # Remove the run folder
+    try:
+        subprocess.run("rm -r run", shell=True)
+    except:
+        pass
+
+    # Remove the sol folder
+    try:
+        subprocess.run("rm -r sol", shell=True)
+    except:
+        pass
+
     return costs, trials, runtime
 
 
