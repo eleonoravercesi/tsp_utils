@@ -349,9 +349,9 @@ def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], 
     if remove_all:
         # Remove the tmp directory
         os.rmdir(tmp_dir, recursive=True)
-    if get_tour:
+    if get_tour and not get_edges:
         return ot, bb_nodes, time, X_t
-    if get_edges:
+    if get_edges and not get_tour:
         return ot, bb_nodes, time, X_e
     if get_tour and get_edges:
         return ot, bb_nodes, time, X_t, X_e
