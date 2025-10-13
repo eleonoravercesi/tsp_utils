@@ -1,26 +1,40 @@
 #%%
 # Test the function dual_sep
 
-from tsp_utils.stsp import dual_sep, solve_tsp, create_tsp_problem_object
+from tsp_utils.stsp import dual_sep, solve_tsp, create_tsp_problem_object, from_edge_list_to_tour
 import networkx as nx
 from networkx.algorithms.approximation.steinertree import metric_closure
 import numpy as np
 
 from tsp_utils.tsp import run_LKH
 
-#%% Test LKH3
-n = 6
+#%%
+# Test the function from_edge_list_to_tour
+n = 10
 np.random.seed(42)
 m = n * ( n - 1) // 2
 G = nx.complete_graph(n)
 for (u, v) in G.edges():
     G.edges[u, v]['weight'] = np.random.randint(1, 10)
 
-problem = create_tsp_problem_object(G)
-with open("tmp.tsp", "w") as f:
-    problem_str = str(problem).replace("EDGE_WEIGHT_SECTION:", "EDGE_WEIGHT_SECTION:\n")
-    f.write(problem_str)
-costs, trials, runtime = run_LKH("tmp.tsp", lkh3_path="/home/vercee/libraries/LKH-3.0.9/LKH")
+opt, edges, runtime = solve_tsp(G)
+
+tour = from_edge_list_to_tour(edges, n)
+
+
+# #%% Test LKH3
+# n = 6
+# np.random.seed(42)
+# m = n * ( n - 1) // 2
+# G = nx.complete_graph(n)
+# for (u, v) in G.edges():
+#     G.edges[u, v]['weight'] = np.random.randint(1, 10)
+#
+# problem = create_tsp_problem_object(G)
+# with open("tmp.tsp", "w") as f:
+#     problem_str = str(problem).replace("EDGE_WEIGHT_SECTION:", "EDGE_WEIGHT_SECTION:\n")
+#     f.write(problem_str)
+# costs, trials, runtime = run_LKH("tmp.tsp", lkh3_path="/home/vercee/libraries/LKH-3.0.9/LKH")
 
 # #%%
 # # Create a path graph on n nodes

@@ -568,3 +568,44 @@ def write_tsplib(G, filename, cost="weight"):
     with open(filename, "w") as f:
         problem_str = str(problem).replace("EDGE_WEIGHT_SECTION:", "EDGE_WEIGHT_SECTION:\n")
         f.write(problem_str)
+
+def from_edge_list_to_tour(E_keep, n):
+    """
+    Starts from a list of nodes [(i1, i2) , (i3, i4)] ... and returns a tour, starting from 0, ending in 0
+
+    Parameters
+    ----------
+    E_keep : list
+        List of edges, that will be kept like that
+    n : int
+        The number of nodes we are talking about
+
+    Returns
+    -------
+    Ls : list
+        List of nodes, starting from 0, being a tour
+    """
+    # Work with E!
+    E = E_keep.copy()
+
+    current_node = 0
+    Ls = [current_node]
+
+    while len(Ls) < n + 1: # Bc it starts and ends with 0
+        # Get the next edge
+        next_edge = next(filter(lambda e: current_node in e, E), None)
+
+        # Remove next edge from E
+        E.remove(next_edge)
+
+        # Get the other node
+        u, v = next_edge
+
+        if u == current_node:
+            Ls.append(v)
+            current_node = v
+        elif v == current_node:
+            Ls.append(u)
+            current_node = u
+
+    return Ls
