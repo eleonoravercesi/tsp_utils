@@ -312,7 +312,7 @@ def run_concorde(G, cost=None, concorde_path=None, seed = None, options=[], verb
             tsp_file = tmp_dir + "tmp.tsp"
             to_write = f"NAME: tmp\nTYPE: TSP\nDIMENSION: {G.number_of_nodes()}\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n"
             for i in range(G.number_of_nodes()):
-                x, y = G.nodes[i]["coordinates"]
+                x, y = G.nodes[i]["coord"]
                 to_write += f" {i + 1} {x} {y}\n"
             to_write += "EOF\n"
             with open(tsp_file, 'w') as f:
