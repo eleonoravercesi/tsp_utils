@@ -307,8 +307,8 @@ def run_concorde(G, cost=None, concorde_path=None, seed = None, options=[], verb
         # Check if the cost is equal to None
         if cost is None:
             # Then, you need coordinate attributes
-            if "coordinates" not in G.nodes[0]:
-                raise ValueError("If cost is None, the graph must have 'coordinates' attribute for each node; else, provide the cost attribute to use")
+            if "coord" not in G.nodes[0]:
+                raise ValueError("If cost is None, the graph must have 'coord' attribute for each node; else, provide the cost attribute to use")
             tsp_file = tmp_dir + "tmp.tsp"
             to_write = f"NAME: tmp\nTYPE: TSP\nDIMENSION: {G.number_of_nodes()}\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n"
             for i in range(G.number_of_nodes()):
