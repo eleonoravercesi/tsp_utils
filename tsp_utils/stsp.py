@@ -283,7 +283,7 @@ def parse_sol(filename, as_tour = False, as_list_of_edges = False):
             edges.append((u, v))
         return edges
 
-def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], verbose=False, remove_all=False, get_tour = False, get_edges = False):
+def run_concorde(G, cost=None, concorde_path=None, seed = None, options=[], verbose=False, remove_all=False, get_tour = False, get_edges = False):
     """
     Run the Concorde TSP solver on a given graph.
 
@@ -296,6 +296,7 @@ def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], 
     """
     assert concorde_path != None, "Concorde path must be provided"
 
+
     concorde_path = pathlib.Path(concorde_path)
 
     # Create a directory named tmp to store temporary files
@@ -303,11 +304,27 @@ def run_concorde(G, cost="weight", concorde_path=None, seed = None, options=[], 
     pathlib.Path(tmp_dir).mkdir(parents=True, exist_ok=True)
 
     if type(G) == nx.Graph:
-        problem = create_tsp_problem_object(G, cost=cost)
-        tsp_file = tmp_dir + "tmp.tsp"
-        with open(tsp_file, 'w') as f:
-            problem.write(f)
+        # Check if the cost is equal to None
+        if cost is None:
+            # Then, you need coordinate attributes
+            if "coordinates" not in G.nodes[0]:
+                raise ValueError("If cost is None, the graph must have 'coordinates' attribute for each node; else, provide the cost attribute to use")
+            tsp_file = tmp_dir + "tmp.tsp"
+            to_write = f"NAME: tmp\nTYPE: TSP\nDIMENSION: {G.number_of_nodes()}\nEDGE_WEIGHT_TYPE: EUC_2D\nNODE_COORD_SECTION\n"
+            for i in range(G.number_of_nodes()):
+                x, y = G.nodes[i]["coordinates"]
+                to_write += f" {i + 1} {x} {y}\n"
+            to_write += "EOF\n"
+            with open(tsp_file, 'w') as f:
+                f.write(to_write)
+            # Now you are ready to run concorde
+        else:
+            problem = create_tsp_problem_object(G, cost=cost)
+            tsp_file = tmp_dir + "tmp.tsp"
+            with open(tsp_file, 'w') as f:
+                problem.write(f)
     else:
+        assert type(G) == str, "G must be a networkx.Graph or a string representing the path to a TSPLIB file"
         F = open(G, "r")
         lines = F.read()
         F.close()
