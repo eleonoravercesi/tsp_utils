@@ -1,7 +1,6 @@
 """
 This module contains functions to solve the Symmetric Traveling Salesman Problem
 Author: Eleonora Vercesi
-Date: Sept 2025
 
 Functions
 ----------
