@@ -293,7 +293,7 @@ def run_concorde(G, cost=None, concorde_path=None, seed = None, options=[], verb
     concorde_path : str
     # TODO
     """
-    assert concorde_path != None, "Concorde path must be provided"
+    assert concorde_path != None, "Concorde path must be provided. This must be the path to the concorde executable, that is, the file named concorde in the build/TSP directory of the concorde library"
 
 
     concorde_path = pathlib.Path(concorde_path)
@@ -323,7 +323,7 @@ def run_concorde(G, cost=None, concorde_path=None, seed = None, options=[], verb
             with open(tsp_file, 'w') as f:
                 problem.write(f)
     else:
-        assert type(G) == str, "G must be a networkx.Graph or a string representing the path to a TSPLIB file"
+        assert type(G) == str or type(G) in [pathlib.PosixPath, pathlib.Path], "G must be a networkx.Graph or a string/pathlib.Path/pathlib.PosixPath object representing the path to a TSPLIB file"
         F = open(G, "r")
         lines = F.read()
         F.close()

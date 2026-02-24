@@ -1,25 +1,32 @@
 #%%
 # Test the function dual_sep
 
-from tsp_utils.stsp import dual_sep, solve_tsp, create_tsp_problem_object, from_edge_list_to_tour
+from tsp_utils.stsp import dual_sep, solve_tsp, create_tsp_problem_object, from_edge_list_to_tour, run_concorde
 import networkx as nx
 from networkx.algorithms.approximation.steinertree import metric_closure
 import numpy as np
-
 from tsp_utils.tsp import run_LKH
+from pathlib import Path
 
-#%%
-# Test the function from_edge_list_to_tour
-n = 10
-np.random.seed(42)
-m = n * ( n - 1) // 2
-G = nx.complete_graph(n)
-for (u, v) in G.edges():
-    G.edges[u, v]['weight'] = np.random.randint(1, 10)
+#%% Test the pathlib thing in run_concorde
+instances_path = Path("../STSP_instances")
+instance_path = Path("TSPLIB/burma14.tsp")
+concorde_path = "/home/vercee/libraries/concorde/build/TSP/concorde"
 
-opt, edges, runtime = solve_tsp(G)
+out = run_concorde(instances_path / instance_path, concorde_path=concorde_path)
 
-tour = from_edge_list_to_tour(edges, n)
+# #%%
+# # Test the function from_edge_list_to_tour
+# n = 10
+# np.random.seed(42)
+# m = n * ( n - 1) // 2
+# G = nx.complete_graph(n)
+# for (u, v) in G.edges():
+#     G.edges[u, v]['weight'] = np.random.randint(1, 10)
+#
+# opt, edges, runtime = solve_tsp(G)
+#
+# tour = from_edge_list_to_tour(edges, n)
 
 
 # #%% Test LKH3
