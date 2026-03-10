@@ -513,6 +513,9 @@ def solve_sep(G, cost="weight", verbose=False, time_limit=None, tol=1e-6):
     if time_limit is not None:
         model.setRealParam("limits/time", time_limit)
 
+    # Enforce the primal simplex
+    model.setIntParam("lp/initalgorithm = s", 'p')
+
     # Add variables
     x = {}
     for u, v in edges:
