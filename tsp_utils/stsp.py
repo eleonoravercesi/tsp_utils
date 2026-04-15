@@ -201,19 +201,6 @@ def solve_tsp_fixed_edge(G, e=None, cost="weight", verbose=False):
 
     return model.getObjVal(), non_zero_edges, runtime
 
-def create_tsp_problem_object(G, cost="weight"):
-    problem = tsplib95.models.StandardProblem()
-    problem.name = "tmp"
-    problem.type = "TSP"
-    problem.dimension = G.number_of_nodes()
-    problem.edge_weight_type = "EXPLICIT"
-    problem.edge_weight_format = "UPPER_ROW"
-    edge_weight_section = []
-    for i in range(problem.dimension):
-        for j in range(i + 1, problem.dimension):
-            edge_weight_section.append(int(G[i][j][cost]))
-    problem.edge_weights = [edge_weight_section]
-    return problem
 
 def parse_log(filename):
     F = open(filename)
@@ -569,24 +556,6 @@ def solve_sep(G, cost="weight", verbose=False, time_limit=None, tol=1e-6):
     # Return solution, objective value, and runtime
     solution = {e: model.getVal(var) for e, var in x.items()}
     return model.getObjVal(), solution, model.getSolvingTime()
-
-def write_tsplib(G, filename, cost="weight"):
-    """
-    Write a TSPLIB file from a NetworkX graph.
-
-    Parameters
-    ----------
-    G : networkx.Graph
-        The graph to write.
-    filename : str
-        The name of the file to write.
-    cost : str
-        The edge attribute to use as cost. Default: 'weight'
-    """
-    problem = create_tsp_problem_object(G, cost=cost)
-    with open(filename, "w") as f:
-        problem_str = str(problem).replace("EDGE_WEIGHT_SECTION:", "EDGE_WEIGHT_SECTION:\n")
-        f.write(problem_str)
 
 def from_edge_list_to_tour(E_keep, n):
     """
