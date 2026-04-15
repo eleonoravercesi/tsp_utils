@@ -53,8 +53,15 @@ def solve_tsp(G, cost="weight", verbose=False):
         Whether to print verbose output. Default: False
 
     Returns:
-    --------
-    TODO
+    optimal tsp : float
+        Optimal value
+    edges in the optimal solution : list
+        of pairs building the tour
+    runtime : float
+        The runtime of the solver
+    bb_nodes : int
+        The number of branch-and-bound nodes explored by the solver
+
     """
 
 
@@ -112,7 +119,9 @@ def solve_tsp(G, cost="weight", verbose=False):
     # Get the runtime
     runtime = model.getTotalTime()
 
-    return model.getObjVal(), non_zero_edges, runtime
+    bb_nodes = model.getNNodes()
+
+    return model.getObjVal(), non_zero_edges, runtime, bb_nodes
 
 
 def solve_tsp_fixed_edge(G, e=None, cost="weight", verbose=False):

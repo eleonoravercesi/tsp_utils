@@ -7,8 +7,9 @@ from pathlib import Path
 from tsp_utils.utils import read_tsplib
 
 #%% Test if the parser works
-instance_path = "/Users/eleonoravercesi/Documents/PostDoc/HardTSPLIB/instances/10001_hard.tsp"
+instance_path = "/Users/eleonoravercesi/Documents/PostDoc/HardTSPLIB/instances/15002_hard.tsp"
 G = read_tsplib(instance_path)
+_, _, _, bb_nodes = solve_tsp(G, verbose=True)
 
 
 #%% Test the pathlib thing in run_concorde
