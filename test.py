@@ -1,11 +1,17 @@
-from tsp_utils.stsp import dual_sep, solve_tsp, create_tsp_problem_object, from_edge_list_to_tour, run_concorde, solve_sep
+from tsp_utils.stsp import dual_sep, solve_tsp, from_edge_list_to_tour, run_concorde, solve_sep
 import networkx as nx
 from networkx.algorithms.approximation.steinertree import metric_closure
 import numpy as np
 from tsp_utils.tsp import run_LKH
 from pathlib import Path
+from tsp_utils.utils import read_tsplib
 
-# #%% Test the pathlib thing in run_concorde
+#%% Test if the parser works
+instance_path = "/Users/eleonoravercesi/Documents/PostDoc/HardTSPLIB/instances/10001_hard.tsp"
+G = read_tsplib(instance_path)
+
+
+#%% Test the pathlib thing in run_concorde
 # instances_path = Path("../STSP_instances")
 # instance_path = Path("TSPLIB/burma14.tsp")
 # concorde_path = "/home/vercee/libraries/concorde/build/TSP/concorde"
@@ -13,14 +19,14 @@ from pathlib import Path
 # out = run_concorde(instances_path / instance_path, concorde_path=concorde_path)
 
 #%% Test solve_sep
-n = 10
-np.random.seed(42)
-m = n * ( n - 1) // 2
-G = nx.complete_graph(n)
-for (u, v) in G.edges():
-    G.edges[u, v]['weight'] = np.random.randint(1, 10)
-
-opt, edges, runtime = solve_sep(G)
+# n = 10
+# np.random.seed(42)
+# m = n * ( n - 1) // 2
+# G = nx.complete_graph(n)
+# for (u, v) in G.edges():
+#     G.edges[u, v]['weight'] = np.random.randint(1, 10)
+#
+# opt, edges, runtime = solve_sep(G)
 
 # #%%
 # # Test the function from_edge_list_to_tour

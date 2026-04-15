@@ -10,11 +10,16 @@ This repository provides convenient interfaces and helper functions for parsing,
 
 `tsp_utils` offers functionalities including:
 
-- **Loading and parsing TSPLIB-formatted instances**
-- Support for **distance matrix computation**
+- Loading and parsing TSPLIB-formatted instances
 - Utilities for running and benchmarking TSP solvers
   - Wrappers for common solvers
   - Log parsing and runtime extraction
+
+Several function are built using the `tsplib95` library, which provides a convenient interface 
+for working with TSP instances in Python. The [`tsplib95`](https://pypi.org/project/tsplib95/) library allows you to easily load and 
+manipulate TSP instances, and it provides a simple API for accessing the data contained in the 
+TSPLIB files. However, for us, an **instance** is a `nx.Graph` object. 
+
 
 ---
 
@@ -22,11 +27,11 @@ This repository provides convenient interfaces and helper functions for parsing,
 Among other methods, you have:
 - `stsp.solve_tsp` with `pySCIPopt`
 - `stsp.solve_tsp_fixed_edge`, which allows to solve a TSP instance with a fixed edge (i.e., a partial solution) using `pySCIPopt`. 
-- `stsp.create_tsp_problem_object` which creates a `tsplib95.tsp.TSPProblem` object
 - `stsp.run_concorde` that runs Concorde on a given TSP instance and returns the solution, runtime, and other things
 - `stsp.run_concorde_LB` that just runs the linear relaxation (Dantzig-Fulkerson-Johnson formulation) of Concorde and returns the lower bound and the runtime
 - `stsp.solve_sep` that solves the linear relaxation with pySCIPopt
-- `stsp.write_tsplib` that writes a TSP instance in TSPLIB format
+- `utils.create_tsp_problem_object` which creates a `tsplib95.tsp.TSPProblem` object
+- `utils.read_tsplib` that reads a TSPLIB instance and returns a `nx.Graph` or `nx.DiGraph` object
 - `tsp.run_LKH` that runs LKH3 on a given TSP instance and returns the solution, runtime, and other things
 ---
 ## 🆘 Installation
@@ -44,6 +49,7 @@ tsp_utils/
 ├── tsp_utils/              # Python package
 │   ├── stsp.py             # Utilities for symmetric TSP instances
     ├── tsp.py              # Utilities for all TSP types (including asymmetric)
+    ├── utils.py            # General helper functions, mostly for parsing and loading instances
 └── README.md
 ```
 ---
