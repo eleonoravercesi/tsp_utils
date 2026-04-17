@@ -90,14 +90,15 @@ def read_tsplib(filename):
 
     G = None # Will be either graph or digraph, depending on the type of problem
     n = None
-    G.graph["name"] = filename
     for line in lines:
         if line.startswith("TYPE:"):
             problem_type = line.split(":")[1].strip()
             if problem_type == "TSP":
                 G = nx.Graph()
+                G.graph["name"] = filename
             elif problem_type == "ATSP":
                 G = nx.DiGraph()
+                G.graph["name"] = filename
             else:
                 raise ValueError(f"Unsupported problem type: {problem_type}")
         elif line.startswith("DIMENSION:"):
