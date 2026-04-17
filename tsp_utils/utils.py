@@ -90,6 +90,7 @@ def read_tsplib(filename):
 
     G = None # Will be either graph or digraph, depending on the type of problem
     n = None
+    G.graph["name"] = filename
     for line in lines:
         if line.startswith("TYPE:"):
             problem_type = line.split(":")[1].strip()
